@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Tentukan Foto dan Nama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        .drag-over {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+        }
+        .photo-slot {
+            aspect-ratio: 450/660;
+        }
+        .selected-item-photo {
+            aspect-ratio: 450/660;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 to-purple-50 min-h-screen p-4">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Tentukan Foto dan Nama dengan Menekannya</h1>
+        
+        <!-- Upload Section -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Upload Foto max 40 (4x6 cm)</h2>
+            <div class="mb-4">
+                <!-- DropZone Upload Section -->
+                <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p class="text-gray-600 mb-2">Klik atau seret foto ke sini</p>
+                    <p class="text-gray-500 text-sm">Upload satu per satu hingga 40 foto</p>
+                    <input type="file" id="photoInput" accept="image/*" class="hidden" multiple>
+                </div>
+            </div>
+            <div class="text-center">
+                <p class="text-lg font-medium text-gray-700">Foto terupload: <span id="uploadCount" class="text-blue-600">0</span>/40</p>
+            </div>
+        </div>
+        
+        <!-- Selection Section -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8" id="selectionSection" style="display: none;">
+            <div class="grid lg:grid-cols-2 gap-8 w-full">
+                <!-- Photo Selection -->
+                <div class="w-full">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Pilih Foto</h2>
+                    <div id="photoGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-3 p-2 border rounded-lg w-full max-h-96 overflow-y-auto">
+                    </div>
+                </div>
+        
+                <!-- Text Selection -->
+                <div class="w-full">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Pilih Teks (40 tersedia)</h2>
+                    <div id="textGrid" class="space-y-2 p-2 border rounded-lg w-full max-h-96 overflow-y-auto"></div>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <button id="addSelectedItem" class="bg-blue-600 text-white py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    Tambah Item Terpilih
+                </button>
+                <p class="text-sm text-gray-600 mt-2">Pilih satu foto dan satu teks, lalu klik tombol di atas</p>
+            </div>
+        </div>
+        
+        <!-- Selected Items Display -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Item Terpilih (<span id="itemCount">0</span>/40)</h2>
+                <div class="flex gap-2">
+                    <button id="exportPdfBtn" class="bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                        📄 Export PDF
+                    </button>
+                    <!-- Tambahkan tombol Reset di sini -->
+                    <button id="resetBtn" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors font-medium">
+                        Reset
+                    </button>
+                </div>
+            </div>
+            <div id="selectedItemsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-6">
+                <!-- Selected items will appear here -->
+            </div>
+        </div>
+        
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-12">
+            <svg class="mx-auto h-20 w-20 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <p class="text-gray-500 text-xl">Upload foto terlebih dahulu</p>
+            <p class="text-gray-400">Minimal upload 1 foto untuk mulai membuat koleksi</p>
+        </div>
+    </div>
+    
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-semibold mb-4">Edit Teks</h3>
+            <textarea id="editTextInput" maxlength="40" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none h-24"></textarea>
+            <div class="text-right text-sm text-gray-500 mt-1 mb-4">
+                <span id="editCharCount">0</span>/40 karakter
+            </div>
+            <div class="flex gap-3">
+                <button id="cancelEdit" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors">
+                    Batal
+                </button>
+                <button id="saveEdit" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                    Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 40 Pre-defined texts
+        const availableTexts = [
+            "M. DEVKHAN", "EVANO PRAYATA", "KHANZA ZIVANA", "NAURA",
+            "RAYSA RAHMA", "JIHAN MAIKAYLA", "MUHAMAD ABIZARD", "MUHAMMAD DELVIN WIBOWO",
+            "FINA AGUSTIANI", "NADYA SAFIRA", "RAEHAN AL RAJABI", "MUHAMMAD RAYHAN",
+            "NAUFAL FIRAZ MUZAKKI", "MUHAMMAD ARSYAD ALHAJIQ", "KEYSIA MIYUKI HASIBUAN", "KHALIFI ATHAFARIZ",
+            "GIBRAN HADI", "HANA TUFHAILA", "QIARA AYU NINGTIAS", "MUHAMMAD SHOHIBUL BAYYAN"
+        ];
+
+        let uploadedPhotos = [];
+        let selectedItems = [];
+        let selectedPhoto = null;
+        let selectedText = null;
+        let currentEditIndex = -1;
+
+        // ==== LOCAL STORAGE ====
+        function saveState() {
+            const state = { uploadedPhotos, selectedItems };
+            localStorage.setItem('photoAppState', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const savedState = localStorage.getItem('photoAppState');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                uploadedPhotos = state.uploadedPhotos || [];
+                selectedItems = state.selectedItems || [];
+
+                if (uploadedPhotos.length > 0) {
+                    selectionSection.style.display = 'block';
+                    emptyState.style.display = 'none';
+                }
+
+                updateUploadCount();
+                renderPhotoGrid();
+                renderSelectedItems();
+            }
+        }
+
+        // ==== ELEMENTS ====
+        const dropZone = document.getElementById('dropZone');
+        const photoInput = document.getElementById('photoInput');
+        const uploadCount = document.getElementById('uploadCount');
+        const selectionSection = document.getElementById('selectionSection');
+        const photoGrid = document.getElementById('photoGrid');
+        const textGrid = document.getElementById('textGrid');
+        const addButton = document.getElementById('addSelectedItem');
+        const selectedItemsGrid = document.getElementById('selectedItemsGrid');
+        const emptyState = document.getElementById('emptyState');
+        const itemCount = document.getElementById('itemCount');
+        const editModal = document.getElementById('editModal');
+        const editTextInput = document.getElementById('editTextInput');
+        const editCharCount = document.getElementById('editCharCount');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+        // ==== INIT ====
+        function init() {
+            loadState();
+            renderTextGrid();
+            updateAddButton();
+            renderSelectedItems();
+
+            // Event listeners
+            dropZone.addEventListener('click', () => photoInput.click());
+            dropZone.addEventListener('dragover', handleDragOver);
+            dropZone.addEventListener('dragleave', handleDragLeave);
+            dropZone.addEventListener('drop', handleDrop);
+            photoInput.addEventListener('change', handleFileSelect);
+            addButton.addEventListener('click', addSelectedItem);
+            editTextInput.addEventListener('input', updateEditCharCount);
+            document.getElementById('cancelEdit').addEventListener('click', closeEditModal);
+            document.getElementById('saveEdit').addEventListener('click', saveEdit);
+            exportPdfBtn.addEventListener('click', exportToPdf);
+
+            // Reset button
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                if (confirm('Yakin ingin memulai dari awal? Semua data akan dihapus.')) {
+                    uploadedPhotos = [];
+                    selectedItems = [];
+                    selectedPhoto = null;
+                    selectedText = null;
+                    localStorage.removeItem('photoAppState');
+
+                    updateUploadCount();
+                    renderPhotoGrid();
+                    renderSelectedItems();
+                    selectionSection.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    updateAddButton();
+                }
+            });
+        }
+
+        // ==== DRAG & DROP ====
+        function handleDragOver(e) { e.preventDefault(); dropZone.classList.add('drag-over'); }
+        function handleDragLeave(e) { e.preventDefault(); dropZone.classList.remove('drag-over'); }
+        function handleDrop(e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            Array.from(e.dataTransfer.files).forEach(file => handleFile(file));
+        }
+        function handleFileSelect(e) {
+            Array.from(e.target.files).forEach(file => handleFile(file));
+        }
+
+        function handleFile(file) {
+            if (uploadedPhotos.length >= 40) { alert('Maksimal 40 foto sudah tercapai!'); return; }
+            if (!file.type.startsWith('image/')) { alert('Silakan pilih file gambar'); return; }
+            if (file.size > 10 * 1024 * 1024) { alert('Ukuran file terlalu besar. Maksimal 10MB'); return; }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                resizeImage(e.target.result, 450, 660, (resizedImage) => {
+                    uploadedPhotos.push({ id: Date.now() + Math.random(), src: resizedImage, originalName: file.name });
+                    updateUploadCount();
+                    renderPhotoGrid();
+                    if (uploadedPhotos.length >= 1) {
+                        selectionSection.style.display = 'block';
+                        emptyState.style.display = 'none';
+                    }
+                    saveState(); // SAVE STATE HERE
+                    photoInput.value = '';
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resizeImage(imageSrc, targetWidth, targetHeight, callback) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                const ctx = canvas.getContext('2d');
+                const scale = Math.max(targetWidth / img.width, targetHeight / img.height);
+                const scaledWidth = img.width * scale;
+                const scaledHeight = img.height * scale;
+                const offsetX = (targetWidth - scaledWidth) / 2;
+                const offsetY = (targetHeight - scaledHeight) / 2;
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, targetWidth, targetHeight);
+                ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+                callback(canvas.toDataURL('image/jpeg', 0.9));
+            };
+            img.src = imageSrc;
+        }
+
+        // ==== UPDATE COUNT ====
+        function updateUploadCount() { uploadCount.textContent = uploadedPhotos.length; }
+
+        // ==== RENDER GRID ====
+        function renderPhotoGrid() {
+            photoGrid.innerHTML = uploadedPhotos.map((photo, index) => `
+                <div class="relative photo-option photo-slot border-2 border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:border-blue-400 transition-colors" data-index="${index}">
+                    <img src="${photo.src}" alt="Foto ${index + 1}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 pointer-events-none overlay hidden rounded-lg bg-blue-50 bg-opacity-50"></div>
+                    <button class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 delete-photo-btn" data-index="${index}">&times;</button>
+                </div>
+            `).join('');
+
+            // Klik pilih foto
+            document.querySelectorAll('.photo-option').forEach(option => {
+                option.addEventListener('click', e => {
+                    if (!e.target.classList.contains('delete-photo-btn')) selectPhoto(parseInt(option.dataset.index));
+                });
+            });
+
+            // Hapus foto
+            document.querySelectorAll('.delete-photo-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    deleteUploadedPhoto(parseInt(btn.dataset.index));
+                });
+            });
+        }
+
+        function renderTextGrid() {
+            textGrid.innerHTML = availableTexts.map((text, index) => `
+                <div class="text-option p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors" data-index="${index}">
+                    <p class="text-sm text-gray-800">${text}</p>
+                </div>
+            `).join('');
+            document.querySelectorAll('.text-option').forEach(option => {
+                option.addEventListener('click', () => selectText(parseInt(option.dataset.index)));
+            });
+        }
+
+        function renderSelectedItems() {
+            itemCount.textContent = selectedItems.length;
+            exportPdfBtn.disabled = selectedItems.length === 0;
+
+            selectedItemsGrid.innerHTML = selectedItems.map((item, index) => `
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="selected-item-photo overflow-hidden">
+                        <img src="${item.photo}" alt="Item ${index + 1}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <p class="text-gray-800 text-center font-medium mb-4 min-h-[3rem] flex items-center justify-center text-sm leading-tight">${item.text}</p>
+                        <div class="flex gap-2">
+                            <button class="edit-btn flex-1 bg-yellow-500 text-white py-2 px-3 rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium" data-index="${index}">Edit</button>
+                            <button class="delete-btn flex-1 bg-red-500 text-white py-2 px-3 rounded-lg hover:bg-red-600 transition-colors text-sm font-medium" data-index="${index}">Hapus</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => editItem(parseInt(btn.dataset.index)));
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteItem(parseInt(btn.dataset.index)));
+            });
+        }
+
+        // ==== SELECTION ====
+        function selectPhoto(index) {
+            document.querySelectorAll('.photo-option').forEach(option => {
+                option.classList.remove('border-blue-500');
+                option.querySelector('.overlay').classList.add('hidden');
+            });
+
+            const selectedOption = document.querySelector(`[data-index="${index}"].photo-option`);
+            selectedOption.classList.add('border-blue-500');
+            selectedOption.querySelector('.overlay').classList.remove('hidden');
+
+            selectedPhoto = index;
+            updateAddButton();
+        }
+
+        function selectText(index) {
+            document.querySelectorAll('.text-option').forEach(option => option.classList.remove('border-blue-500', 'bg-blue-100'));
+            const selectedOption = document.querySelector(`[data-index="${index}"].text-option`);
+            selectedOption.classList.add('border-blue-500', 'bg-blue-100');
+            selectedText = index;
+            updateAddButton();
+        }
+
+        function updateAddButton() {
+            const canAdd = selectedPhoto !== null && selectedText !== null && selectedItems.length < 40;
+            addButton.disabled = !canAdd;
+        }
+
+        function addSelectedItem() {
+            if (selectedPhoto !== null && selectedText !== null && selectedItems.length < 40) {
+                const newItem = {
+                    id: Date.now(),
+                    photoIndex: selectedPhoto,
+                    photo: uploadedPhotos[selectedPhoto].src,
+                    text: availableTexts[selectedText],
+                    originalTextIndex: selectedText
+                };
+                
+                selectedItems.push(newItem);
+                
+                // Reset selections
+                selectedPhoto = null;
+                selectedText = null;
+                
+                // Reset UI untuk foto
+                document.querySelectorAll('.photo-option').forEach(option => {
+                    option.classList.remove('border-blue-500');
+                    option.querySelector('.overlay').classList.add('hidden');
+                });
+
+                // Reset UI untuk teks
+                document.querySelectorAll('.text-option').forEach(option => {
+                    option.classList.remove('border-blue-500', 'bg-blue-100');
+                });
+                
+                updateAddButton();
+                renderSelectedItems();
+                saveState(); // ✅ simpan ke localStorage
+            }
+        }
+
+        function deleteItem(index) {
+            if (confirm('Yakin ingin menghapus item ini?')) {
+                selectedItems.splice(index, 1);
+                renderSelectedItems();
+                updateAddButton();
+                saveState(); // SAVE STATE AFTER DELETE ITEM
+            }
+        }
+
+        function deleteUploadedPhoto(index) {
+            if (confirm('Yakin ingin menghapus foto ini?')) {
+                uploadedPhotos.splice(index, 1);
+                if (selectedPhoto === index) selectedPhoto = null;
+                updateUploadCount();
+                renderPhotoGrid();
+                if (uploadedPhotos.length === 0) {
+                    selectionSection.style.display = 'none';
+                    emptyState.style.display = 'block';
+                }
+                updateAddButton();
+                saveState(); // SAVE STATE AFTER DELETE PHOTO
+            }
+        }
+
+        // ==== EDIT MODAL ====
+        function editItem(index) { currentEditIndex = index; editTextInput.value = selectedItems[index].text; updateEditCharCount(); editModal.classList.remove('hidden'); editModal.classList.add('flex'); }
+        function closeEditModal() { editModal.classList.add('hidden'); editModal.classList.remove('flex'); currentEditIndex = -1; }
+        function saveEdit() { 
+            if (currentEditIndex >= 0) { 
+                const newText = editTextInput.value.trim();
+                if (newText) {
+                    selectedItems[currentEditIndex].text = newText;
+                    renderSelectedItems();
+                    saveState(); // SAVE STATE AFTER EDIT
+                    closeEditModal();
+                }
+            }
+        }
+        function updateEditCharCount() { editCharCount.textContent = editTextInput.value.length; }
+
+        async function exportToPdf() {
+            if (selectedItems.length === 0) {
+                alert('Tidak ada item untuk di-export!');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            const pageWidth = 210;
+            const pageHeight = 297;
+            const margin = 15;
+
+            const itemsPerRow = 3;
+            const rowsPerPage = 3; // 3 baris per halaman
+            const itemsPerPage = itemsPerRow * rowsPerPage;
+
+            const itemWidth = (pageWidth - margin * (itemsPerRow + 1)) / itemsPerRow;
+            const itemHeight = (pageHeight - margin * (rowsPerPage + 1)) / rowsPerPage;
+
+            const photoHeight = itemHeight - 12; // 12mm untuk teks + spacing
+            const textHeight = 10;
+
+            let currentPage = 1;
+            let itemsOnCurrentPage = 0;
+
+            // Judul Halaman Pertama
+            pdf.setFontSize(16);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Hasil Nama & Foto yang Benar', pageWidth / 2, margin + 10, { align: 'center' });
+
+            for (let i = 0; i < selectedItems.length; i++) {
+                const item = selectedItems[i];
+
+                if (itemsOnCurrentPage >= itemsPerPage) {
+                    pdf.addPage();
+                    currentPage++;
+                    itemsOnCurrentPage = 0;
+                }
+
+                const row = Math.floor(itemsOnCurrentPage / itemsPerRow);
+                const col = itemsOnCurrentPage % itemsPerRow;
+
+                const x = margin + col * (itemWidth + margin);
+                const y = (currentPage === 1 ? margin + 20 : margin) + row * (itemHeight + 5);
+
+                // Foto
+                try {
+                    // Deteksi format gambar
+                    const format = item.photo.startsWith("data:image/png") ? "PNG" : "JPEG";
+                    pdf.addImage(item.photo, format, x, y, itemWidth, photoHeight);
+                } catch (error) {
+                    pdf.setDrawColor(200, 200, 200);
+                    pdf.rect(x, y, itemWidth, photoHeight);
+                    pdf.setFontSize(10);
+                    pdf.text('Foto tidak dapat dimuat', x + itemWidth / 2, y + photoHeight / 2, { align: 'center' });
+                }
+
+                // Teks
+                pdf.setFontSize(12);
+                pdf.setFont('helvetica', 'normal');
+                const textLines = pdf.splitTextToSize(item.text, itemWidth - 2);
+                pdf.text(textLines, x + 1, y + photoHeight + 7);
+
+                itemsOnCurrentPage++;
+            }
+
+            // Nomor halaman
+            const totalPages = pdf.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                pdf.setFontSize(10);
+                pdf.text(`Halaman ${i} dari ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+            }
+
+            // Metadata PDF
+            pdf.setProperties({
+                title: "Tentukan Foto",
+                subject: "Export hasil nama & foto",
+                author: "Aplikasi Web",
+                keywords: "PDF, Foto, Export",
+                creator: "jsPDF"
+            });
+
+            // Nama file dengan timestamp
+            const now = new Date();
+            const timestamp = now.toISOString().slice(0, 19).replace(/[:-]/g, '').replace('T', '_');
+            pdf.save(`Tentukan_Foto_${timestamp}.pdf`);
+        }
+        
+        // Initialize the app
+        init();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'975299b4b550c4af',t:'MTc1NjIwMzY2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
