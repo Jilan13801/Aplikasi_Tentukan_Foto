@@ -518,7 +518,19 @@
             // Nama file dengan timestamp
             const now = new Date();
             const timestamp = now.toISOString().slice(0, 19).replace(/[:-]/g, '').replace('T', '_');
-            pdf.save(`Tentukan_Foto_${timestamp}.pdf`);
+            const fileName = `Tentukan_Foto_${timestamp}.pdf`;
+
+            // === Trigger download supaya di HP terlihat "Mengunduh..." ===
+            const pdfBlob = pdf.output("blob");
+            const url = URL.createObjectURL(pdfBlob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
         
         // Initialize the app
