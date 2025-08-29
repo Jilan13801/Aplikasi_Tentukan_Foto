@@ -118,11 +118,11 @@
     <script>
         // 40 Pre-defined texts
         const availableTexts = [
-            "M. DEVKHAN", "EVANO PRAYATA", "KHANZA ZIVANA", "NAURA",
-            "RAYSA RAHMA", "JIHAN MAIKAYLA", "MUHAMAD ABIZARD", "MUHAMMAD DELVIN WIBOWO",
-            "FINA AGUSTIANI", "NADYA SAFIRA", "RAEHAN AL RAJABI", "MUHAMMAD RAYHAN",
-            "NAUFAL FIRAZ MUZAKKI", "MUHAMMAD ARSYAD ALHAJIQ", "KEYSIA MIYUKI HASIBUAN", "KHALIFI ATHAFARIZ",
-            "GIBRAN HADI", "HANA TUFHAILA", "QIARA AYU NINGTIAS", "MUHAMMAD SHOHIBUL BAYYAN"
+            "AHMAD NAZRIEL KHAIR ALFAREZEL (NAZRIEL)", "AURYN SALWA", "M. DEVKHAN", "EVANO PRAYATA",
+            "KHANZA ZIVANA", "NAURA", "RAYSA RAHMA", "JIHAN MAIKAYLA", "MUHAMAD ABIZARD", "MUHAMMAD DELVIN WIBOWO",
+            "FINA AGUSTIANI", "NADYA SAFIRA", "RAEHAN AL RAJABI", "MUHAMMAD RAYHAN", "NAUFAL FIRAZ MUZAKKI",
+            "MUHAMMAD ARSYAD ALHAJIQ", "KEYSIA MIYUKI HASIBUAN", "KHALIFI ATHAFARIZ", "GIBRAN HADI", "HANA TUFHAILA",
+            "QIARA AYU NINGTIAS", "MUHAMMAD SHOHIBUL BAYYAN", "FIAN", "FAIL", "AYESA NUHA M", "KIRANA ZHAFIRA AYUNINDYA"
         ];
 
         let uploadedPhotos = [];
@@ -445,7 +445,7 @@
             const margin = 15;
 
             const itemsPerRow = 3;
-            const rowsPerPage = 3;
+            const rowsPerPage = 3; // 3 baris per halaman
             const itemsPerPage = itemsPerRow * rowsPerPage;
 
             const itemWidth = (pageWidth - margin * (itemsPerRow + 1)) / itemsPerRow;
@@ -457,7 +457,7 @@
             let currentPage = 1;
             let itemsOnCurrentPage = 0;
 
-            // Judul halaman pertama
+            // Judul Halaman Pertama
             pdf.setFontSize(16);
             pdf.setFont('helvetica', 'bold');
             pdf.text('Hasil Nama & Foto yang Benar', pageWidth / 2, margin + 10, { align: 'center' });
@@ -520,8 +520,17 @@
             const timestamp = now.toISOString().slice(0, 19).replace(/[:-]/g, '').replace('T', '_');
             const fileName = `Tentukan_Foto_${timestamp}.pdf`;
 
-            // === Cara paling simpel & kompatibel di HP ===
-            pdf.save(fileName);
+            // === Trigger download supaya di HP terlihat "Mengunduh..." ===
+            const pdfBlob = pdf.output("blob");
+            const url = URL.createObjectURL(pdfBlob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
         
         // Initialize the app
